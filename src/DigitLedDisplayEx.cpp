@@ -260,7 +260,7 @@ void DigitLedDisplay::tableChar(byte address, char c)
 			offs = 58;
 			break;
 		default:
-			offs = 36;
+			offs = 53;
 			break;
 	}
 	write(address, pgm_read_word_near(charTable + offs));
