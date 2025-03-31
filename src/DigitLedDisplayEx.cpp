@@ -8,6 +8,8 @@
 
 DigitLedDisplay::DigitLedDisplay(int dinPin, int csPin, int clkPin)
 {
+	buildTable();
+	_digitLimit = 4; // Default to 4 digits
 	DIN_PIN = dinPin;
 	CS_PIN = csPin;
 	CLK_PIN = clkPin;
@@ -51,219 +53,7 @@ void DigitLedDisplay::off()
 void DigitLedDisplay::clear()
 {
 	for(int i = 0; i < _digitLimit; i++)
-	{
 		write(1+i, 0);
-	}
-}
-
-void DigitLedDisplay::tableChar(byte address, char c)
-{
-	int offs;
-	switch (c)
-	{
-		case '0': 
-			offs = 0;
-			break;
-		case '1':
-			offs = 1;
-			break;
-		case '2':
-			offs = 2;
-			break;
-		case '3':
-			offs = 3;
-			break;
-		case '4':
-			offs = 4;
-			break;
-		case '5':
-			offs = 5;
-			break;
-		case '6':
-			offs = 6;
-			break;
-		case '7':
-			offs = 7;
-			break;
-		case '8':
-			offs = 8;
-			break;
-		case '9':
-			offs = 9;
-			break;
-		case 'A':
-			offs = 10;
-			break;
-		case 'a':
-			offs = 41;
-			break;
-		case 'B':
-		case 'b':
-			offs = 11;
-			break;
-		case 'c':
-			offs = 42;
-			break;
-		case '(':
-		case '[':
-		case 'C':
-			offs = 12;
-			break;
-		case 'D':
-		case 'd':
-			offs = 13;
-			break;
-		case 'e':
-			offs = 48;
-			break;
-		case 'E':
-			offs = 14;
-			break;
-		case 'f':
-		case 'F':
-			offs = 15;
-			break;
-		case 'g':
-			offs = 43;
-			break;
-		case 'G':
-			offs = 16;
-			break;
-		case 'h':
-			offs = 44;
-			break;
-		case 'H':
-			offs = 17;
-			break;
-		case 'i':
-		case 'I':
-			offs = 18;
-			break;
-		case 'j':
-			offs = 50;
-			break;
-		case 'J':
-			offs = 19;
-			break;
-		case 'k':
-		case 'K':
-			offs = 20;
-			break;
-		case 'l':
-		case 'L':
-			offs = 21;
-			break;
-		case 'm':
-		case 'M':
-			offs = 22;
-			break;
-		case 'N':
-		case 'n':
-			offs = 23;
-			break;
-		case 'o':
-			offs = 45;
-			break;
-		case 'O':
-			offs = 24;
-			break;
-		case 'p':
-		case 'P':
-			offs = 25;
-			break;
-		case 'Q':
-		case 'q':
-			offs = 26;
-			break;
-		case 'R':
-		case 'r':
-			offs = 27;
-			break;
-		case 's':
-		case 'S':
-			offs = 28;
-			break;
-		case 'T':
-		case 't':
-			offs = 29;
-			break;
-		case 'u':
-			offs = 46;
-			break;
-		case 'U':
-			offs = 30;
-			break;
-		case 'v':
-		case 'V':
-			offs = 31;
-			break;
-		case 'w':
-		case 'W':
-			offs = 32;
-			break;
-		case 'x':
-		case 'X':
-			offs = 33;
-			break;
-		case 'Y':
-		case 'y':
-			offs = 34;
-			break;
-		case 'z':
-		case 'Z':
-			offs = 45;
-			break;
-		case ' ':
-			offs = 36;
-			break;
-		case '-':
-			offs = 37;
-			break;
-		case '.':
-			offs = 38;
-			break;
-		case '*':
-			offs = 39;
-			break;
-		case '_':
-			offs = 40;
-			break;
-		case '=':
-			offs = 47;
-			break;
-		case '?':
-			offs = 49;
-			break;
-		case '^':
-			offs = 51;
-			break;
-		case ']':
-		case ')':
-			offs = 52;
-			break;
-		case '!':
-			offs = 53;
-			break; // error symbol
-		case '@':
-			offs = 54;
-			break;
-		case '/':
-			offs = 55;
-			break;
-		case ':':
-			offs = 56;
-			break;
-		case '"':
-			offs = 57;
-			break;
-		case '\'':
-			offs = 58;
-			break;
-		default:
-			offs = 53;
-			break;
-	}
-	write(address, pgm_read_word_near(charTable + offs));
 }
 
 void DigitLedDisplay::write(volatile byte address, volatile byte data)
@@ -277,11 +67,101 @@ void DigitLedDisplay::write(volatile byte address, volatile byte data)
 void DigitLedDisplay::printString(const char *string, byte startDigit)
 {
 	int slen = strlen(string);
-	for (int i = 0; i < slen; i++)
-		tableChar(slen - i + startDigit, string[i]);
+	int addr = slen + startDigit;
+	for(int i = 0; i < slen; i++)
+		write(addr - i, pgm_read_word_near(charTable + string[i]));  //OCIO - BE CAREFUL to use only plain ascii chars, or add an '& 0x7f'
 }
 
 void DigitLedDisplay::printMask(byte dgt, byte startDigit)
 {
 	write(address, dgt);
+}
+
+void DigitLedDisplay::buildTable()
+{
+	const byte errorSymbol = 0b01001001; // error symbol
+	memset(charTable, errorSymbol, sizeof(charTable));
+	charTable['!'] = errorSymbol; //tanto per essere tassonomici  
+	//                  ABCDEFG
+	charTable[' '] = 0b00000000;  
+	charTable['0'] = 0b01111110; 
+	charTable['1'] = 0b00110000; 
+	charTable['2'] = 0b01101101; 
+	charTable['3'] = 0b01111001; 
+	charTable['4'] = 0b00110011; 
+	charTable['5'] = 0b01011011; 
+	charTable['6'] = 0b01011111; 
+	charTable['7'] = 0b01110000; 
+	charTable['8'] = 0b01111111;  
+	charTable['9'] = 0b01111011;  
+	charTable['A'] = 0b01110111;  
+	charTable['a'] = 0b01111101;  
+	charTable['B'] = 0b00011111;  
+	charTable['b'] = 0b00011111;  
+	charTable['C'] = 0b01001110;  
+	charTable['c'] = 0b00001101;  
+	charTable['D'] = 0b00111101;  
+	charTable['d'] = 0b00111101;  
+	charTable['E'] = 0b01001111;  
+	charTable['e'] = 0b01101111;  
+	charTable['F'] = 0b01000111;  
+	charTable['f'] = 0b01000111;  
+	charTable['G'] = 0b01011110;  
+	charTable['g'] = 0b01111011;  
+	charTable['H'] = 0b00110111;  
+	charTable['h'] = 0b00010111;  
+	charTable['I'] = 0b00000110;  
+	charTable['i'] = 0b00000110;  
+	charTable['J'] = 0b00111000;  
+	charTable['j'] = 0b00011000;  
+	charTable['K'] = 0b00110111;  
+	charTable['k'] = 0b00110111;  
+	charTable['L'] = 0b00001110;  
+	charTable['l'] = 0b00001110;  
+	charTable['M'] = 0b01010101;  
+	charTable['m'] = 0b01010101;  
+	charTable['N'] = 0b00010101;  
+	charTable['n'] = 0b00010101;  
+	charTable['O'] = 0b01111110;  
+	charTable['o'] = 0b00011101;  
+	charTable['P'] = 0b01100111;  
+	charTable['p'] = 0b01100111;  
+	charTable['Q'] = 0b01110011;  
+	charTable['q'] = 0b01110011;  
+	charTable['R'] = 0b00000101;  
+	charTable['r'] = 0b00000101;  
+	charTable['S'] = 0b01011011;  
+	charTable['s'] = 0b01011011;  
+	charTable['T'] = 0b00001111;  
+	charTable['t'] = 0b00001111;  
+	charTable['U'] = 0b00111110;  
+	charTable['u'] = 0b00011100;  
+	charTable['V'] = 0b00111110;  
+	charTable['v'] = 0b00111110;  
+	charTable['W'] = 0b00111111;  
+	charTable['w'] = 0b00111111;  
+	charTable['X'] = 0b00110111;  
+	charTable['x'] = 0b00110111;  
+	charTable['Y'] = 0b00111011;  
+	charTable['y'] = 0b00111011;  
+	charTable['Z'] = 0b01101101;  
+	charTable['z'] = 0b01101101;  
+	charTable['('] = 0b01001110;  
+	charTable['['] = 0b01001110;  
+	charTable['-'] = 0b00000001;  
+	charTable['.'] = 0b10000000;  // dot led on!
+	charTable['*'] = 0b01100011;  
+	charTable['_'] = 0b00001000;  
+	charTable['='] = 0b00001001;  
+	charTable['?'] = 0b01100101;  
+	charTable['^'] = 0b01000000;  
+	charTable[')'] = 0b01111000;  
+	charTable[']'] = 0b01111000;  
+	charTable['@'] = 0b01110101;  
+	charTable['/'] = 0b00100101;  
+	charTable['\\'] =0b00010011;  
+	charTable[':'] = 0b00110110;  
+	charTable['"'] = 0b00100010;  
+	charTable['\''] =0b00100000; 
+	//                  ABCDEFG
 }
