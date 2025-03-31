@@ -13,18 +13,19 @@
 #include <WProgram.h>
 #endif
 
+#include "charTable.h"
+
 class DigitLedDisplay
 {
 	private:
 		int DIN_PIN;
 		int CS_PIN;
 		int CLK_PIN;
-		int _digitLimit;
+		int _numDigits;
 		void write(byte address, byte data);
-		static const byte charTable[127] PROGMEM;
-		void buildTable()
 
 	public:
+		DigitLedDisplay(int numDigits, int dinPin, int csPin, int clkPin);
 		DigitLedDisplay(int dinPin, int csPin, int clkPin);
 		void setBright(int brightness);
 		void setDigitLimit(int limit);

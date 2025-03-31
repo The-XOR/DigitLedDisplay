@@ -6,15 +6,12 @@
    7 to DIN,
    6 to CS,
    5 to CLK */
-DigitLedDisplay ld = DigitLedDisplay(7, 6, 5);
+DigitLedDisplay ld = DigitLedDisplay(8, 7, 6, 5);
 
 void setup() {
 
   /* Set the brightness min:1, max:15 */
   ld.setBright(10);
-
-  /* Set the digit count */
-  ld.setDigitLimit(8);
 
 }
 
@@ -54,8 +51,12 @@ void loop()
   delay(1500);
   ld.clear();
 
-  ld.printString(".23");
-  delay(1500);
-  ld.clear();
-
+  int i=1;
+  while(true)
+  {
+      ld.printMask(i++, 3);
+      delay(500);
+      if(i>7)
+        i=1;
+  }
 }
