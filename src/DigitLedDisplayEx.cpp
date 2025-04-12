@@ -73,12 +73,35 @@ void DigitLedDisplay::write(volatile byte address, volatile byte data)
 void DigitLedDisplay::printString(const char *string, byte startDigit)
 {
 	int slen = strlen(string);
-	int addr = slen + startDigit;
+	int slenCorr=slen;
 	for(int i = 0; i < slen; i++)
-		write(addr - i, pgm_read_word_near(charTable + string[i]));  //OCIO - BE CAREFUL to use only plain ascii chars, or add an '& 0x7f'
+		if(string[i] == '.') // OCIO - dot is not a char, so we need to skip it
+			slenCorr--;
+	
+
+	int addr = slenCorr + startDigit;
+	int corr=0;
+
+	for(int i = 0; i < slen; i++)
+	{
+		if((i < slen - 1) && string[i+1]=='.') // OCIO - dot is not a char, so we need to skip it
+		{
+			write(addr - i+corr, 0x80|pgm_read_word_near(charTable + string[i]));  //OCIO - BE CAREFUL to use only plain ascii chars, or add an '& 0x7f'
+			i++;
+			corr++;
+		} else
+			write(addr - i+corr, pgm_read_word_near(charTable + string[i]));  //OCIO - BE CAREFUL to use only plain ascii chars, or add an '& 0x7f'
+	}
 }
 
 void DigitLedDisplay::printMask(byte dgt, byte startDigit)
 {
 	write(startDigit, dgt);
+}
+
+void DigitLedDisplay::printDigit(long number, byte startDigit) 
+{
+	char s[50];
+	sprintf(s, "%ld", number);
+	printString(s, startDigit);
 }

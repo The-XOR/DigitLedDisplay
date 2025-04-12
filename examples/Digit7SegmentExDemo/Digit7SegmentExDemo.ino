@@ -18,11 +18,11 @@ void setup() {
 void loop() 
 {
 
-  ld.printString("01234567");
+  ld.printDigit(12345678);
   delay(2500);
   ld.clear();
 
-  ld.printString("89 .23");
+  ld.printString("R90-0.2 .3");
   delay(2500);
   ld.clear();
   ld.printString("AaBbCcDd");

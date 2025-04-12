@@ -31,6 +31,7 @@ class DigitLedDisplay
 		void setDigitLimit(int limit);
 		void printString(const char *string, byte startDigit = 0);
 		void printMask(byte dgt, byte startDigit = 0);
+		void printDigit(long number, byte startDigit = 0);
 		void clear();
 		void on();
 		void off();
